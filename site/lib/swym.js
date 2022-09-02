@@ -1,5 +1,4 @@
-export default function Abc() {
-  console.log('yashit')
+export default function SwymInit() {
   hdls_SetRegid()
   hdls_InjectWishlistCollection()
 }
