@@ -14,6 +14,8 @@ interface ProductViewProps {
   product: Product
   relatedProducts: Product[]
 }
+import * as React from 'react'
+import SwymInit from '@lib/swym'
 
 const ProductView: FC<ProductViewProps> = ({ product, relatedProducts }) => {
   const { price } = usePrice({
@@ -21,6 +23,10 @@ const ProductView: FC<ProductViewProps> = ({ product, relatedProducts }) => {
     baseAmount: product.price.retailPrice,
     currencyCode: product.price.currencyCode!,
   })
+
+  React.useEffect(() => {
+    SwymInit()
+  }, [])
 
   return (
     <>
