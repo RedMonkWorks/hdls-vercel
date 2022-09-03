@@ -5,6 +5,7 @@ import type { LogoutHook } from '../types/logout'
 import useCustomer from '../customer/use-customer'
 import customerAccessTokenDeleteMutation from '../utils/mutations/customer-access-token-delete'
 import { getCustomerToken, setCustomerToken } from '../utils/customer-token'
+import { hdls_SwymConfig } from './../../../../site/lib/swym'
 
 export default useLogout as UseLogout<typeof handler>
 
@@ -20,6 +21,13 @@ export const handler: MutationHook<LogoutHook> = {
       },
     })
     setCustomerToken(null)
+
+    // console.log('Hdls - customer logged out')
+
+    var swymConfig = await hdls_SwymConfig(null)
+
+    console.log(swymConfig)
+
     return null
   },
   useHook:

@@ -1,9 +1,10 @@
-import { useCallback } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import type { MutationHook } from '@vercel/commerce/utils/types'
 import { CommerceError } from '@vercel/commerce/utils/errors'
 import useLogin, { UseLogin } from '@vercel/commerce/auth/use-login'
 import type { LoginHook } from '../types/login'
 import useCustomer from '../customer/use-customer'
+import { hdls_SwymConfig } from './../../../../site/lib/swym'
 
 import {
   setCustomerToken,
@@ -42,6 +43,12 @@ export const handler: MutationHook<LoginHook> = {
 
     if (accessToken) {
       setCustomerToken(accessToken)
+
+      // console.log('Hdls - customer logged in', accessToken)
+
+      var swymConfig = await hdls_SwymConfig(accessToken)
+
+      console.log(swymConfig)
     }
 
     return null

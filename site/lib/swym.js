@@ -4,14 +4,16 @@ const SWYM_HDLS_CONFIG = {
     'https://swym-hdls-staging.myshopify.com/api/2021-07/graphql.json', //Shopiy Store url with graphql endpoint
   swymPid: 'BZJ3UlIxMXVCOCb++RWYUTLG2LilSFjX3A9fu9JepvM=', //Unique provider id from Swym Dashboard
   swymHost: 'https://swymstore-v3dev-01-01.swymrelay.com', //Get from Swym Dashboard
+  swymLname: 'My Wishlist',
 }
 
-const swymConfig_Test = {
+const SWYM_TEST = {
   pid: 'BZJ3UlIxMXVCOCb++RWYUTLG2LilSFjX3A9fu9JepvM=',
   lid: 'a9ffe748-d7c9-4d81-ad5c-244b48c55e43',
   regid:
     'MznZr5IO6zoeRiuIOsdvsPLvKdyWmXbwEKdYljFSm5VjOy7f2pyf2GTBtM7WbAkINwgNoVCrRvNhzZCkDfoxwedmFS80W_SFKQVnyhjXptK8O7QVV-tNyW-yj2xRkl3cd162JMKgGo-mcj6kcDmDAhLTZ_JIZtdc3Al9H62Q1n0',
   sessionid: '6436wzov2ccyjlxiyie5679836ci0f9sdxyxf1k9zkfhkbt9jc4d5qn5jewjl922',
+  lname: 'My Wishlist',
 }
 
 let hdls_ls_name = 'hdls_ls' // Local Storage Key storing config and list objects
@@ -30,6 +32,9 @@ export default async function SwymInit() {
 
     hdls_VariantSelector(productData, productHandle)
   }
+
+  // var listDetails = await hdls_getOrCreateDefaultWishlist(SWYM_TEST)
+  // console.log(listDetails)
 }
 
 async function hdls_ProductData(productHandle) {
@@ -200,8 +205,7 @@ function hdls_VariantSelector(productData, productHandle) {
         })
 
         if (variantFound) {
-          console.log(productId, obj.node.id, productUrl)
-          hdls_AddToWishlist(productId, variantId, productUrl)
+          hdls_AddToWishlist(productId, variantId, productUrl, SWYM_TEST)
         }
       })
     }
@@ -210,14 +214,19 @@ function hdls_VariantSelector(productData, productHandle) {
   }
 }
 
-async function hdls_AddToWishlist(productId, variantId, productUrl) {
+async function hdls_AddToWishlist(
+  productId,
+  variantId,
+  productUrl,
+  swymConfig
+) {
   var myHeaders = new Headers()
   myHeaders.append('Content-Type', 'application/x-www-form-urlencoded')
 
   var urlencoded = new URLSearchParams()
-  urlencoded.append('regid', swymConfig_Test.regid)
-  urlencoded.append('sessionid', swymConfig_Test.sessionid)
-  urlencoded.append('lid', swymConfig_Test.lid)
+  urlencoded.append('regid', swymConfig.regid)
+  urlencoded.append('sessionid', swymConfig.sessionid)
+  urlencoded.append('lid', swymConfig.lid)
   urlencoded.append(
     'a',
     `[{ "epi":${variantId}, "empi": ${productId}, "du":"${productUrl}", "cprops": {}, "note": null, "qty": 1 }]`
@@ -232,7 +241,7 @@ async function hdls_AddToWishlist(productId, variantId, productUrl) {
 
   return fetch(
     `https://swymstore-v3dev-01-01.swymrelay.com/api/v3/lists/update-ctx?pid=${encodeURIComponent(
-      swymConfig_Test.pid
+      SWYM_HDLS_CONFIG.swymPid
     )}`,
     requestOptions
   )
@@ -277,6 +286,172 @@ async function hdls_AddToWishlist(productId, variantId, productUrl) {
 
       return error
     })
+}
+
+async function hdls_DeleteFromWishlist(
+  productId,
+  variantId,
+  productUrl,
+  swymConfig
+) {
+  var myHeaders = new Headers()
+  myHeaders.append('Content-Type', 'application/x-www-form-urlencoded')
+
+  var urlencoded = new URLSearchParams()
+  urlencoded.append('regid', swymConfig.regid)
+  urlencoded.append('sessionid', swymConfig.sessionid)
+  urlencoded.append('lid', swymConfig.lid)
+  urlencoded.append(
+    'd',
+    `[{ "epi":${variantId}, "empi": ${productId}, "du":"${productUrl}", "cprops": {}, "note": null, "qty": 1 }]`
+  )
+
+  var requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+    body: urlencoded,
+    redirect: 'follow',
+  }
+
+  return fetch(
+    `https://swymstore-v3dev-01-01.swymrelay.com/api/v3/lists/update-ctx?pid=${encodeURIComponent(
+      SWYM_HDLS_CONFIG.swymPid
+    )}`,
+    requestOptions
+  )
+    .then((response) => response.json())
+    .then((result) => {
+      console.log('Hdls - Added variant to wishlist', result)
+
+      return result
+    })
+    .catch((error) => {
+      console.log('error', error)
+
+      return error
+    })
+}
+
+async function hdls_GetOrCreateDefaultWishlist(swymConfig) {
+  console.log('Hdls - Fetching or Creating List for Current Regid')
+
+  return fetch(
+    `${
+      SWYM_HDLS_CONFIG.swymHost
+    }/api/v3/lists/fetch-lists?pid=${encodeURIComponent(
+      SWYM_HDLS_CONFIG.swymPid
+    )}`,
+    {
+      body: `regid=${swymConfig.regid}&sessionid=${swymConfig.sessionid}`,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      method: 'POST',
+    }
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.length) {
+        console.log('Hdls - List Fetched for User')
+
+        return data[0]
+      } else {
+        return fetch(
+          `${
+            SWYM_HDLS_CONFIG.swymHost
+          }/api/v3/lists/create?pid=${encodeURIComponent(
+            SWYM_HDLS_CONFIG.swymPid
+          )}`,
+          {
+            body: `lname=${SWYM_HDLS_CONFIG.swymLname}&sessionid=${swymConfig.sessionid}&regid=${swymConfig.regid}`,
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            method: 'POST',
+          }
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            console.log('Hdls - List Created for User')
+
+            return data
+          })
+      }
+    })
+}
+
+export async function hdls_SwymConfig(customerToken) {
+  if (customerToken != null) {
+    console.log('Entered function', customerToken != null)
+
+    var myHeaders = new Headers()
+    myHeaders.append('Content-Type', 'application/json')
+    myHeaders.append('Accept', 'application/json')
+
+    var raw = JSON.stringify({
+      host: SWYM_HDLS_CONFIG.swymHost,
+      email: 'yashit.thakur@swu=ymcorp.com',
+      pid: SWYM_HDLS_CONFIG.swymPid,
+    })
+
+    var requestOptions = {
+      method: 'POST',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow',
+    }
+
+    return fetch('http://localhost:5050/auth', requestOptions)
+      .then((response) => response.json())
+      .then((result) => {
+        console.log('Hdls - User Login Detected and RegID generated')
+
+        const swymConfig = {
+          regid: result.regid,
+          sessionid: result.sessionid,
+        }
+
+        return swymConfig
+      })
+      .catch((error) => {
+        console.log('error', error)
+
+        return error
+      })
+  } else {
+    return fetch(
+      `${
+        SWYM_HDLS_CONFIG.swymHost
+      }/api/v3/provider/register?pid=${encodeURIComponent(
+        SWYM_HDLS_CONFIG.swymPid
+      )}`,
+      {
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        method: 'POST',
+      }
+    )
+      .then((response) => response.json())
+      .then((result) => {
+        console.log('Hdls - User Logout Detected and RegID generated')
+
+        const swymConfig = {
+          regid: result.regid,
+          sessionid: hdls_CreateSessionid(64),
+        }
+
+        return swymConfig
+      })
+      .catch((error) => {
+        console.log('error', error)
+
+        return error
+      })
+  }
 }
 
 function hdls_StorageInitialize() {
@@ -352,7 +527,7 @@ async function hdls_SetRegid() {
   // Function to Set SessionID and RegID in Cookies and LS
   var hdls_ls = hdls_StorageInitialize()
 
-  var customerEmail = ''
+  var customerEmail = '{{ customer.email }}'
 
   if (customerEmail !== '' && hdls_GetCookie('hdls_logged') !== 'yes') {
     // Customer Logged In
