@@ -6,6 +6,14 @@ const SWYM_HDLS_CONFIG = {
   swymHost: 'https://swymstore-v3dev-01-01.swymrelay.com', //Get from Swym Dashboard
 }
 
+const swymConfig_Test = {
+  pid: 'BZJ3UlIxMXVCOCb++RWYUTLG2LilSFjX3A9fu9JepvM=',
+  lid: 'a9ffe748-d7c9-4d81-ad5c-244b48c55e43',
+  regid:
+    'MznZr5IO6zoeRiuIOsdvsPLvKdyWmXbwEKdYljFSm5VjOy7f2pyf2GTBtM7WbAkINwgNoVCrRvNhzZCkDfoxwedmFS80W_SFKQVnyhjXptK8O7QVV-tNyW-yj2xRkl3cd162JMKgGo-mcj6kcDmDAhLTZ_JIZtdc3Al9H62Q1n0',
+  sessionid: '6436wzov2ccyjlxiyie5679836ci0f9sdxyxf1k9zkfhkbt9jc4d5qn5jewjl922',
+}
+
 let hdls_ls_name = 'hdls_ls' // Local Storage Key storing config and list objects
 
 export default async function SwymInit() {
@@ -20,7 +28,7 @@ export default async function SwymInit() {
     )
     var productData = await hdls_ProductData(productHandle)
 
-    hdls_VariantSelector(productData)
+    hdls_VariantSelector(productData, productHandle)
   }
 }
 
@@ -56,7 +64,15 @@ async function hdls_ProductData(productHandle) {
                   }
               }
           }
+          images(first: 1) {
+            edges {
+                node {
+                    src
+                }
+            }
+          }
           options {
+              name
               values
           }
       }
@@ -82,10 +98,9 @@ async function hdls_ProductData(productHandle) {
     })
 }
 
-function hdls_VariantSelector(productData) {
-  console.log(productData)
+function hdls_VariantSelector(productData, productHandle) {
   var productId = window.atob(productData.id).split('gid://shopify/Product/')[1]
-  console.log(productId)
+  var productUrl = window.location.origin + '/product/' + productHandle
 
   var wishlistModalForm = document.querySelector(`#empi-${productId}`)
 
@@ -102,26 +117,166 @@ function hdls_VariantSelector(productData) {
 
     swymForm.innerHTML = `
       <h2>Which variant do you want to add to Wishlist</h2>
+      <img src="${productData.images.edges[0].node.src}" width="200px">
+      <br>
     `
 
-    console.log(productData.variants.edges)
+    // productData.variants.edges.forEach((obj, index) => {
+    //   var variant = obj.node
+    //   var variantId = window.atob(variant.id).split('gid://shopify/Product/')[1]
+    //   swymForm.innerHTML += `
+    //     <div class="wishlist-variants">
+    //       <img src="${variant.image.src}" width="50px">
+    //       <p>${variant.title}</p>
+    //       <input type="radio" name="hdls_variant" value="${variantId}" ${
+    //     index === 0 ? 'checked' : ''
+    //   }>
+    //     </div>
+    //   `
+    // })
 
-    productData.variants.edges.forEach((obj, index) => {
-      var variant = obj.node
-      var variantId = window.atob(variant.id).split('gid://shopify/Product/')[1]
+    productData.options.forEach((option, index) => {
       swymForm.innerHTML += `
-        <div class="wishlist-variants">
-          <img src="${variant.image.src}" width="50px">
-          <p>${variant.title}</p>
-          <input type="radio" name="hdls_variant" value="${variantId}" ${
-        index === 0 ? 'checked' : ''
-      }>
-        </div>
+        <label value=${option.name}> ${option.name} </label>  
+        <select>  
+          ${variantOptions(option)}
+        </select>
+        <br>
       `
     })
 
+    function variantOptions(option) {
+      var options
+
+      option.values.forEach((variant) => {
+        options += `<option value = "${variant}"> ${variant} </option>`
+      })
+
+      return options
+    }
+
     wishlistModal.appendChild(swymForm)
+
+    var swymButton = document.createElement('button')
+    swymButton.innerText = 'Add To Wishlist'
+
+    swymButton.onclick = function (event) {
+      event.preventDefault()
+
+      var selection = document.querySelectorAll(
+        `#empi-${productId} > form.wishlist-form > select`
+      )
+      var variantType = document.querySelectorAll(
+        `#empi-7551725175004 > form.wishlist-form > label`
+      )
+
+      var selectedSelection = [],
+        selectedType = []
+
+      selection.forEach((obj) => {
+        selectedSelection.push(obj.value)
+      })
+      variantType.forEach((obj) => {
+        selectedType.push(obj.attributes.value.nodeValue)
+      })
+
+      productData.variants.edges.forEach((obj) => {
+        var variantId = window
+          .atob(obj.node.id)
+          .split('gid://shopify/ProductVariant/')[1]
+        var selectedOptions = obj.node.selectedOptions
+        var variantFound = false
+
+        selectedOptions.some((variant, index) => {
+          var name = selectedType[index]
+          var value = selectedSelection[index]
+
+          if (name == variant.name && value == variant.value) {
+            variantFound = true
+          } else if (name != variant.name || value != variant.value) {
+            variantFound = false
+            return true
+          }
+        })
+
+        if (variantFound) {
+          console.log(productId, obj.node.id, productUrl)
+          hdls_AddToWishlist(productId, variantId, productUrl)
+        }
+      })
+    }
+
+    swymForm.appendChild(swymButton)
   }
+}
+
+async function hdls_AddToWishlist(productId, variantId, productUrl) {
+  var myHeaders = new Headers()
+  myHeaders.append('Content-Type', 'application/x-www-form-urlencoded')
+
+  var urlencoded = new URLSearchParams()
+  urlencoded.append('regid', swymConfig_Test.regid)
+  urlencoded.append('sessionid', swymConfig_Test.sessionid)
+  urlencoded.append('lid', swymConfig_Test.lid)
+  urlencoded.append(
+    'a',
+    `[{ "epi":${variantId}, "empi": ${productId}, "du":"${productUrl}", "cprops": {}, "note": null, "qty": 1 }]`
+  )
+
+  var requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+    body: urlencoded,
+    redirect: 'follow',
+  }
+
+  return fetch(
+    `https://swymstore-v3dev-01-01.swymrelay.com/api/v3/lists/update-ctx?pid=${encodeURIComponent(
+      swymConfig_Test.pid
+    )}`,
+    requestOptions
+  )
+    .then((response) => response.json())
+    .then((result) => {
+      // hdls_ls = JSON.parse(window.localStorage.getItem(hdls_ls_name))
+      // var length =
+      //   typeof hdls_ls.list.added === 'undefined'
+      //     ? 0
+      //     : Object.keys(hdls_ls.list.added).length
+      // var respData = data.a[0]
+
+      // const addObj = {
+      //   ...hdls_ls,
+      //   list: {
+      //     ...hdls_ls.list,
+      //     added: {
+      //       ...hdls_ls.list.added,
+      //       [length]: {
+      //         ...respData,
+      //       },
+      //     },
+      //   },
+      // }
+
+      // window.localStorage.setItem(hdls_ls_name, JSON.stringify(addObj))
+
+      // var submitWishlistBtn = document.querySelector(
+      //   `[second-product-url="${e.detail.productUrl}"]`
+      // )
+
+      // document.querySelector(
+      //   `.wishlist-modal[data-url="${e.detail.productUrl}"]`
+      // ).style.display = 'none'
+
+      console.log('Hdls - Added variant to wishlist', result)
+
+      return result
+    })
+    .catch((error) => {
+      console.log('error', error)
+
+      return error
+    })
 }
 
 function hdls_StorageInitialize() {
