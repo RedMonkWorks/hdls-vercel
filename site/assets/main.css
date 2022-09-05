@@ -5,3 +5,5 @@
 @import './components.css';
 
 @tailwind utilities;
+
+@import './hdls_Swym.css';

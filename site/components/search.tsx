@@ -1,7 +1,7 @@
 import cn from 'clsx'
 import type { SearchPropsType } from '@lib/search-props'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 
 import { Layout } from '@components/common'
@@ -13,6 +13,8 @@ import useSearch from '@framework/product/use-search'
 
 import getSlug from '@lib/get-slug'
 import rangeMap from '@lib/range-map'
+
+import SwymInit from '@lib/swym'
 
 const SORT = {
   'trending-desc': 'Trending',
@@ -62,6 +64,10 @@ export default function Search({ categories, brands }: SearchPropsType) {
     }
     setActiveFilter(filter)
   }
+
+  useEffect(() => {
+    SwymInit()
+  }, [])
 
   return (
     <Container>

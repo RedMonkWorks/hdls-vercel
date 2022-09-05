@@ -1,11 +1,14 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import type { MutationHook } from '@vercel/commerce/utils/types'
 import useLogout, { UseLogout } from '@vercel/commerce/auth/use-logout'
 import type { LogoutHook } from '../types/logout'
 import useCustomer from '../customer/use-customer'
 import customerAccessTokenDeleteMutation from '../utils/mutations/customer-access-token-delete'
 import { getCustomerToken, setCustomerToken } from '../utils/customer-token'
-import { hdls_SwymConfig } from './../../../../site/lib/swym'
+import {
+  hdls_SwymConfig,
+  hdls_SetSwymConfig,
+} from './../../../../site/lib/swym'
 
 export default useLogout as UseLogout<typeof handler>
 
@@ -22,11 +25,11 @@ export const handler: MutationHook<LogoutHook> = {
     })
     setCustomerToken(null)
 
-    // console.log('Hdls - customer logged out')
+    console.log('Hdls - customer log off in Vercel')
 
-    var swymConfig = await hdls_SwymConfig(null)
-
-    console.log(swymConfig)
+    hdls_SwymConfig(null).then((data) => {
+      hdls_SetSwymConfig(data)
+    })
 
     return null
   },

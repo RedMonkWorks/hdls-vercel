@@ -1,0 +1,159 @@
+/* The Modal (background) */
+.wishlist-modal {
+  position: fixed; /* Stay in place */
+  z-index: 2; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0, 0, 0); /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+}
+
+.wishlist-form {
+  background-color: #111;
+  width: 30%;
+  position: fixed;
+  left: 35%;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: auto auto auto;
+  row-gap: 20px;
+  justify-content: space-around;
+  justify-items: center;
+}
+
+.column-span-3 {
+  grid-column-start: 1;
+  grid-column-end: 4;
+  font-size: 1.3rem;
+}
+
+.column-span-2 {
+  grid-column-start: 2;
+  grid-column-end: 4;
+  width: 100%;
+  padding: 5px;
+}
+
+.wishlist-variants {
+  display: flex;
+  align-items: center;
+}
+
+.wishlist-variants > p {
+  padding: 0px 10px;
+}
+
+.wishlist-variants > input {
+  padding: 0px 10px;
+  position: absolute;
+  right: 20px;
+}
+
+.headless-button:after {
+  z-index: 2;
+  bottom: 32%;
+  content: '';
+  left: 0;
+  position: absolute;
+  right: 80%;
+  top: 60%;
+  cursor: pointer;
+}
+
+.headless-button-pdp {
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1.5rem;
+  font-weight: 100;
+  margin-top: 10px;
+  width: 100%;
+  border-radius: 0.2px;
+  border-style: solid;
+  border-color: black;
+  cursor: pointer;
+  border-width: thin;
+  z-index: 1;
+  background-color: white;
+}
+
+.headless-button-pdp:hover {
+  border-width: medium;
+}
+
+/* Modal Content */
+.modal-content {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 20%;
+}
+
+/* The Close Button */
+.close {
+  color: #aaaaaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Wishlist Success Popup */ /* Popup container - can be anything you want */
+.popup {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* The actual popup */
+.popup .popuptext {
+  visibility: hidden;
+  width: 160px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -80px;
+}
+
+/* Popup arrow */
+.popup .popuptext::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+/* Toggle this class - hide and show the popup */
+.popup .show {
+  visibility: visible;
+}
+
+.wishlistPdp {
+  margin: 10px 0px;
+}

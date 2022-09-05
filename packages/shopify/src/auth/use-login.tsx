@@ -4,7 +4,10 @@ import { CommerceError } from '@vercel/commerce/utils/errors'
 import useLogin, { UseLogin } from '@vercel/commerce/auth/use-login'
 import type { LoginHook } from '../types/login'
 import useCustomer from '../customer/use-customer'
-import { hdls_SwymConfig } from './../../../../site/lib/swym'
+import {
+  hdls_SwymConfig,
+  hdls_SetSwymConfig,
+} from './../../../../site/lib/swym'
 
 import {
   setCustomerToken,
@@ -44,11 +47,11 @@ export const handler: MutationHook<LoginHook> = {
     if (accessToken) {
       setCustomerToken(accessToken)
 
-      // console.log('Hdls - customer logged in', accessToken)
+      console.log('Hdls - customer logged in Vercel', accessToken)
 
-      var swymConfig = await hdls_SwymConfig(accessToken)
-
-      console.log(swymConfig)
+      hdls_SwymConfig(accessToken).then((data) => {
+        hdls_SetSwymConfig(data)
+      })
     }
 
     return null
