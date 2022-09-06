@@ -18,6 +18,8 @@ interface Props {
 
 const placeholderImg = '/product-img-placeholder.svg'
 
+import { SwymCollectionsButton } from '@lib/swym'
+
 const ProductCard: FC<Props> = ({
   product,
   imgProps,
@@ -25,6 +27,7 @@ const ProductCard: FC<Props> = ({
   noNameTag = false,
   variant = 'default',
 }) => {
+  // console.log(product)
   const { price } = usePrice({
     amount: product.price.value,
     baseAmount: product.price.retailPrice,
@@ -130,6 +133,7 @@ const ProductCard: FC<Props> = ({
             </div>
           </>
         )}
+        <SwymCollectionsButton productData={product} />
       </a>
     </Link>
   )

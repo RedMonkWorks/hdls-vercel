@@ -25,7 +25,8 @@ const ProductView: FC<ProductViewProps> = ({ product, relatedProducts }) => {
   })
 
   React.useEffect(() => {
-    SwymInit()
+    SwymInit(product)
+    // console.log(product)
   }, [])
 
   return (

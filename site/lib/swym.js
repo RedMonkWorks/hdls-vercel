@@ -16,8 +16,10 @@ let SWYM_TEST = {
 
 let hdls_ls_name = 'hdls_ls' // Local Storage Key storing config and list objects
 
-export default async function SwymInit() {
+export default async function SwymInit(product) {
   const pageUrl = window.location.href
+
+  console.log(product)
 
   // PDP page
   if (pageUrl.includes('/product/')) {
@@ -43,13 +45,13 @@ export default async function SwymInit() {
     swymButton.onclick = async function (e) {
       e.preventDefault()
 
-      var productData = await hdls_ProductData(productHandle)
+      var productData = product //await hdls_ProductData(productHandle)
       var productId = window
         .atob(productData.id)
         .split('gid://shopify/Product/')[1]
       var productUrl = window.location.origin + '/product/' + productHandle
       var variantId = window
-        .atob(productData.variants.edges[0].node.id)
+        .atob(productData.variants[0].id)
         .split('gid://shopify/ProductVariant/')[1]
 
       // This step is to get list details and set in SWYM_Test
@@ -64,6 +66,13 @@ export default async function SwymInit() {
             hdls_SetSwymConfig(data).then((finalData) => {
               // Directly call below function when All data is available
               hdls_AddToWishlist(productId, variantId, productUrl, finalData)
+
+              // Check wishlist state of Product
+              // hdls_ProductWishlistState(productId, variantId, finalData).then(
+              //   (x) => {
+              //     console.log('Final result', x)
+              //   }
+              // )
             })
           })
         })
@@ -72,6 +81,13 @@ export default async function SwymInit() {
           hdls_SetSwymConfig(listConfig).then((finalData) => {
             // Directly call below function when All data is available
             hdls_AddToWishlist(productId, variantId, productUrl, finalData)
+
+            // Check wishlist state of Product
+            // hdls_ProductWishlistState(productId, variantId, finalData).then(
+            //   (x) => {
+            //     console.log('Final result', x)
+            //   }
+            // )
           })
         })
       }
@@ -83,39 +99,39 @@ export default async function SwymInit() {
   }
 
   // Collections pages
-  if (
-    pageUrl == 'http://localhost:3000/search/frontpage' ||
-    pageUrl == 'http://localhost:3000/search'
-  ) {
-    console.log('Hdls - Collections page recognized')
-    document.querySelectorAll('[href *= "/product/"]').forEach((card) => {
-      var swymButton = document.createElement('button')
-      swymButton.innerText = `${'\u2665'}`
+  // if (
+  //   pageUrl == 'http://localhost:3000/search/frontpage' ||
+  //   pageUrl == 'http://localhost:3000/search'
+  // ) {
+  //   console.log('Hdls - Collections page recognized')
+  //   document.querySelectorAll('[href *= "/product/"]').forEach((card) => {
+  //     var swymButton = document.createElement('button')
+  //     swymButton.innerText = `${'\u2665'}`
 
-      var productUrl = card.href
-      var productHandle = productUrl.split('/product/')[1]
+  //     var productUrl = card.href
+  //     var productHandle = productUrl.split('/product/')[1]
 
-      swymButton.onclick = async function (e) {
-        e.preventDefault()
+  //     swymButton.onclick = async function (e) {
+  //       e.preventDefault()
 
-        var productData = await hdls_ProductData(productHandle)
+  //       var productData = await hdls_ProductData(productHandle)
 
-        hdls_VariantSelector(productData, productHandle)
+  //       hdls_VariantSelector(productData, productHandle)
 
-        console.log('Hdls - Collection Wishlist Button Clicked')
-      }
+  //       console.log('Hdls - Collection Wishlist Button Clicked')
+  //     }
 
-      console.log('In collections adding')
+  //     console.log('In collections adding')
 
-      card.appendChild(swymButton)
-    })
-  }
+  //     card.appendChild(swymButton)
+  //   })
+  // }
 
-  window.onclick = function (event) {
-    if (event.target.className === 'wishlist-modal') {
-      event.target.style.display = 'none'
-    }
-  }
+  // window.onclick = function (event) {
+  //   if (event.target.className === 'wishlist-modal') {
+  //     event.target.style.display = 'none'
+  //   }
+  // }
 
   // var listDetails = await hdls_getOrCreateDefaultWishlist(SWYM_TEST)
   // console.log(listDetails)
@@ -344,6 +360,12 @@ function hdls_VariantSelector(productData, productHandle) {
   } else {
     wishlistModalForm.style.display = 'block'
   }
+
+  window.onclick = function (event) {
+    if (event.target.className === 'wishlist-modal') {
+      event.target.style.display = 'none'
+    }
+  }
 }
 
 async function hdls_AddToWishlist(
@@ -463,6 +485,17 @@ async function hdls_DeleteFromWishlist(
 
       return error
     })
+}
+
+async function hdls_ProductWishlistState(productId, variantId, swymConfig) {
+  var result = await hdls_GetOrCreateDefaultWishlist(swymConfig)
+
+  const found = result.listcontents.some((product) => {
+    console.log('Value of found', variantId, product.epi)
+    return variantId == product.epi
+  })
+
+  return found
 }
 
 async function hdls_GetOrCreateDefaultWishlist(swymConfig) {
@@ -625,7 +658,33 @@ function hdls_CreateSessionid(len) {
     outStr += newStr.slice(0, Math.min(newStr.length, len - outStr.length))
   }
 
+  var timestamp = Date.now()
+
+  var swymSession = {
+    sessionid: outStr.toLowerCase(),
+    timestamp: timestamp,
+  }
+
   return outStr.toLowerCase()
+}
+
+function hdls_CreateSwymSession(len) {
+  // Len is length usually 64
+  var outStr = '',
+    newStr
+  while (outStr.length < len) {
+    newStr = Math.random().toString(36 /*radix*/).slice(2 /* drop decimal*/)
+    outStr += newStr.slice(0, Math.min(newStr.length, len - outStr.length))
+  }
+
+  var timestamp = Date.now()
+
+  var swymSession = {
+    sessionid: outStr.toLowerCase(),
+    timestamp: timestamp,
+  }
+
+  return swymSession
 }
 
 export async function hdls_SetSwymConfig(swymConfig) {
@@ -635,4 +694,34 @@ export async function hdls_SetSwymConfig(swymConfig) {
   }
 
   return SWYM_TEST
+}
+
+export function SwymCollectionsButton(productData) {
+  const Button = () => {
+    // window.onclick = function (event) {
+    //   if (event.target.className === 'wishlist-modal') {
+    //     event.target.style.display = 'none'
+    //   }
+    // }
+
+    return <button onClick={name}>{'\u2665'}</button>
+  }
+
+  var data = productData.productData
+
+  async function name(e) {
+    e.preventDefault()
+    var productHandle = data.slug
+    var productData = await hdls_ProductData(productHandle)
+
+    hdls_VariantSelector(productData, productHandle)
+
+    console.log('Hdls - Collection Wishlist Button Clicked', productHandle)
+  }
+
+  return (
+    <>
+      <Button />
+    </>
+  )
 }
