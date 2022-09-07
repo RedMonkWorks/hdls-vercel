@@ -1,5 +1,3 @@
-import { useEffect } from 'react'
-
 const SWYM_HDLS_CONFIG = {
   storefrontAccessToken: '1164b762f8549554583031ac743f4747', //Get from Shopify Develop app
   storefrontGraphqlEndpoint:
@@ -55,42 +53,48 @@ export default async function SwymInit(product) {
         .split('gid://shopify/ProductVariant/')[1]
 
       // This step is to get list details and set in SWYM_Test
-      if (SWYM_TEST.regid == null) {
-        hdls_SwymConfig(null).then((swymConfig) => {
-          hdls_GetOrCreateDefaultWishlist(swymConfig).then((listConfig) => {
-            var data = {
-              ...swymConfig,
-              ...listConfig,
-            }
-            console.log(data)
-            hdls_SetSwymConfig(data).then((finalData) => {
-              // Directly call below function when All data is available
-              hdls_AddToWishlist(productId, variantId, productUrl, finalData)
+      // if (SWYM_TEST.regid == null) {
+      //   hdls_SwymConfig(null).then((swymConfig) => {
+      //     hdls_GetOrCreateDefaultWishlist(swymConfig).then((listConfig) => {
+      //       var data = {
+      //         ...swymConfig,
+      //         ...listConfig,
+      //       }
+      //       console.log(data)
+      //       hdls_SetSwymConfig(data).then((finalData) => {
+      //         // Directly call below function when All data is available
+      //         hdls_AddToWishlist(productId, variantId, productUrl, finalData)
 
-              // Check wishlist state of Product
-              // hdls_ProductWishlistState(productId, variantId, finalData).then(
-              //   (x) => {
-              //     console.log('Final result', x)
-              //   }
-              // )
-            })
-          })
-        })
-      } else {
-        hdls_GetOrCreateDefaultWishlist(SWYM_TEST).then((listConfig) => {
-          hdls_SetSwymConfig(listConfig).then((finalData) => {
-            // Directly call below function when All data is available
-            hdls_AddToWishlist(productId, variantId, productUrl, finalData)
+      //         // Check wishlist state of Product
+      //         // hdls_ProductWishlistState(productId, variantId, finalData).then(
+      //         //   (x) => {
+      //         //     console.log('Final result', x)
+      //         //   }
+      //         // )
+      //       })
+      //     })
+      //   })
+      // } else {
+      //   hdls_GetOrCreateDefaultWishlist(SWYM_TEST).then((listConfig) => {
+      //     hdls_SetSwymConfig(listConfig).then((finalData) => {
+      //       // Directly call below function when All data is available
+      //       hdls_AddToWishlist(productId, variantId, productUrl, finalData)
 
-            // Check wishlist state of Product
-            // hdls_ProductWishlistState(productId, variantId, finalData).then(
-            //   (x) => {
-            //     console.log('Final result', x)
-            //   }
-            // )
-          })
-        })
-      }
+      //       // Check wishlist state of Product
+      //       // hdls_ProductWishlistState(productId, variantId, finalData).then(
+      //       //   (x) => {
+      //       //     console.log('Final result', x)
+      //       //   }
+      //       // )
+      //     })
+      //   })
+      // }
+
+      var hdls_ls = JSON.parse(localStorage.getItem(hdls_ls_name))
+
+      var swymConfig = await hdls_RefreshSwymConfig(hdls_ls)
+
+      hdls_AddToWishlist(productId, variantId, productUrl, swymConfig)
 
       console.log('Hdls - PDP Wishlist Button Clicked')
     }
@@ -578,7 +582,10 @@ export async function hdls_SwymConfig(customerToken) {
 
         const swymConfig = {
           regid: result.regid,
-          sessionid: result.sessionid,
+          swymSession: {
+            sessionid: result.sessionid,
+            timestamp: Date.now(),
+          },
         }
 
         return swymConfig
@@ -609,7 +616,7 @@ export async function hdls_SwymConfig(customerToken) {
 
         const swymConfig = {
           regid: result.regid,
-          sessionid: hdls_CreateSessionid(64),
+          swymSession: hdls_CreateSwymSession(24),
         }
 
         return swymConfig
@@ -687,6 +694,43 @@ function hdls_CreateSwymSession(len) {
   return swymSession
 }
 
+function hdls_CompareTimestamp(endDate, startDate) {
+  var diff = endDate - startDate
+  return diff / 60000
+}
+
+// This function is called only on pressing Wishlist button
+async function hdls_RefreshSwymConfig(swymConfig) {
+  var data = { ...swymConfig }
+
+  if (swymConfig == null) {
+    console.log('Regid not found on refresh', swymConfig)
+
+    var swymRegid = await hdls_SwymConfig(null)
+    data = { ...data, ...swymRegid }
+    return hdls_RefreshSwymConfig(data)
+  } else if (
+    swymConfig.swymSession != null &&
+    hdls_CompareTimestamp(Date.now(), swymConfig.swymSession.timestamp) >= 30
+  ) {
+    var swymSession = { swymSession: hdls_CreateSwymSession(24) }
+    data = { ...data, ...swymSession }
+
+    console.log('SwymSession not found on refresh', swymSession, data)
+
+    return hdls_RefreshSwymConfig(data)
+  } else if (typeof swymConfig.lid == 'undefined') {
+    console.log('List not found on refresh', swymConfig)
+
+    var list = await hdls_GetOrCreateDefaultWishlist(swymConfig)
+    data = { ...data, ...list }
+    localStorage.setItem(hdls_ls_name, JSON.stringify(data))
+    return data
+  } else {
+    return data
+  }
+}
+
 export async function hdls_SetSwymConfig(swymConfig) {
   SWYM_TEST = {
     ...SWYM_TEST,
@@ -724,4 +768,19 @@ export function SwymCollectionsButton(productData) {
       <Button />
     </>
   )
+}
+
+export function hdls_SetLocalStorage(swymData) {
+  var hdls_ls = JSON.parse(localStorage.getItem(hdls_ls_name))
+
+  var addData = {
+    // ...hdls_ls,
+    ...swymData,
+  }
+
+  localStorage.setItem(hdls_ls_name, JSON.stringify(addData))
+
+  console.log(swymData)
+
+  return addData
 }

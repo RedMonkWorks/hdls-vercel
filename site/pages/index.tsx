@@ -40,10 +40,6 @@ export async function getStaticProps({
 export default function Home({
   products,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
-  React.useEffect(() => {
-    SwymInit()
-  }, [])
-
   return (
     <>
       <Grid variant="filled">
