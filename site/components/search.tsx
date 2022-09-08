@@ -14,8 +14,6 @@ import useSearch from '@framework/product/use-search'
 import getSlug from '@lib/get-slug'
 import rangeMap from '@lib/range-map'
 
-import SwymInit from '@lib/swym'
-
 const SORT = {
   'trending-desc': 'Trending',
   'latest-desc': 'Latest arrivals',
@@ -64,10 +62,6 @@ export default function Search({ categories, brands }: SearchPropsType) {
     }
     setActiveFilter(filter)
   }
-
-  useEffect(() => {
-    SwymInit()
-  }, [])
 
   return (
     <Container>

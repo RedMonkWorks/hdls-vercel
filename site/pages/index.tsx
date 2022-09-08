@@ -5,7 +5,6 @@ import { Grid, Marquee, Hero } from '@components/ui'
 // import HomeAllProductsGrid from '@components/common/HomeAllProductsGrid'
 import type { GetStaticPropsContext, InferGetStaticPropsType } from 'next'
 import * as React from 'react'
-import SwymInit from './../lib/swym'
 
 export async function getStaticProps({
   preview,

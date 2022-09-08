@@ -13,23 +13,23 @@ let SWYM_TEST = {
 }
 
 let hdls_ls_name = 'hdls_ls' // Local Storage Key storing config and list objects
+let pdpIdentifier = '/product/' // Pageurl includes this and productHandle is the substring after this
+let productFormSelector = '[aria-label="Add to Cart"]' // Wishlist button is injected as child of this component
 
 export default async function SwymInit(product) {
   const pageUrl = window.location.href
 
-  console.log(product)
+  // console.log(product)
 
   // PDP page
-  if (pageUrl.includes('/product/')) {
-    var productHandle = pageUrl.split('/product/')[1]
+  if (pageUrl.includes(pdpIdentifier)) {
+    var productHandle = pageUrl.split(pdpIdentifier)[1]
     console.log(
       'Hdls - PDP recognized getting product data for handle:',
       productHandle
     )
 
-    var productForm = document.querySelector(
-      '[aria-label="Add to Cart"]'
-    ).parentElement
+    var productForm = document.querySelector(productFormSelector).parentElement
 
     var swymButton = document.createElement('button')
 
@@ -274,6 +274,8 @@ function hdls_VariantSelector(productData, productHandle) {
     swymButton.onclick = async function (event) {
       event.preventDefault()
 
+      console.log('Clicked')
+
       var selection = document.querySelectorAll(
         `#empi-${productId} > form.wishlist-form > select`
       )
@@ -291,7 +293,7 @@ function hdls_VariantSelector(productData, productHandle) {
         selectedType.push(obj.attributes.value.nodeValue)
       })
 
-      productData.variants.edges.forEach((obj) => {
+      productData.variants.edges.forEach(async (obj) => {
         var variantId = window
           .atob(obj.node.id)
           .split('gid://shopify/ProductVariant/')[1]
@@ -323,39 +325,47 @@ function hdls_VariantSelector(productData, productHandle) {
         if (variantFound) {
           console.log('Hdls - Adding to wishlist', productUrl)
 
-          if (SWYM_TEST.regid == null) {
-            hdls_SwymConfig(null).then((swymConfig) => {
-              hdls_GetOrCreateDefaultWishlist(swymConfig).then((listConfig) => {
-                var data = {
-                  ...swymConfig,
-                  ...listConfig,
-                }
-                console.log(data)
-                hdls_SetSwymConfig(data).then((finalData) => {
-                  // Directly call below function when All data is available
-                  hdls_AddToWishlist(
-                    productId,
-                    variantId,
-                    productUrl,
-                    finalData
-                  )
+          var hdls_ls = JSON.parse(localStorage.getItem(hdls_ls_name))
 
-                  document.querySelector(`#empi-${productId}`).style.display =
-                    'none'
-                })
-              })
-            })
-          } else {
-            hdls_GetOrCreateDefaultWishlist(SWYM_TEST).then((listConfig) => {
-              hdls_SetSwymConfig(listConfig).then((finalData) => {
-                // Directly call below function when All data is available
-                hdls_AddToWishlist(productId, variantId, productUrl, finalData)
+          var swymConfig = await hdls_RefreshSwymConfig(hdls_ls)
 
-                document.querySelector(`#empi-${productId}`).style.display =
-                  'none'
-              })
-            })
-          }
+          hdls_AddToWishlist(productId, variantId, productUrl, swymConfig)
+
+          document.querySelector(`#empi-${productId}`).style.display = 'none'
+
+          // if (SWYM_TEST.regid == null) {
+          //   hdls_SwymConfig(null).then((swymConfig) => {
+          //     hdls_GetOrCreateDefaultWishlist(swymConfig).then((listConfig) => {
+          //       var data = {
+          //         ...swymConfig,
+          //         ...listConfig,
+          //       }
+          //       console.log(data)
+          //       hdls_SetSwymConfig(data).then((finalData) => {
+          //         // Directly call below function when All data is available
+          //         hdls_AddToWishlist(
+          //           productId,
+          //           variantId,
+          //           productUrl,
+          //           finalData
+          //         )
+
+          //         document.querySelector(`#empi-${productId}`).style.display =
+          //           'none'
+          //       })
+          //     })
+          //   })
+          // } else {
+          //   hdls_GetOrCreateDefaultWishlist(SWYM_TEST).then((listConfig) => {
+          //     hdls_SetSwymConfig(listConfig).then((finalData) => {
+          //       // Directly call below function when All data is available
+          //       hdls_AddToWishlist(productId, variantId, productUrl, finalData)
+
+          //       document.querySelector(`#empi-${productId}`).style.display =
+          //         'none'
+          //     })
+          //   })
+          // }
         }
       })
     }
@@ -727,6 +737,7 @@ async function hdls_RefreshSwymConfig(swymConfig) {
     localStorage.setItem(hdls_ls_name, JSON.stringify(data))
     return data
   } else {
+    localStorage.setItem(hdls_ls_name, JSON.stringify(data))
     return data
   }
 }
