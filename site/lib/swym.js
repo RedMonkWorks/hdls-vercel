@@ -293,6 +293,8 @@ function hdls_VariantSelector(productData, productHandle) {
         selectedType.push(obj.attributes.value.nodeValue)
       })
 
+      var variantNotFound = 0
+
       productData.variants.edges.forEach(async (obj) => {
         var variantId = window
           .atob(obj.node.id)
@@ -366,7 +368,16 @@ function hdls_VariantSelector(productData, productHandle) {
           //     })
           //   })
           // }
+        } else {
+          variantNotFound++
         }
+
+        if (variantNotFound === productData.variants.edges.length)
+          console.log(
+            'Select another variant this variant is not found',
+            variantNotFound,
+            productData.variants.edges.length
+          )
       })
     }
 
