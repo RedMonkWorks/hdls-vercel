@@ -409,7 +409,7 @@ async function hdls_AddToWishlist(
   urlencoded.append('lid', swymConfig.lid)
   urlencoded.append(
     'a',
-    `[{ "epi":${variantId}, "empi": ${productId}, "du":"${productUrl}", "cprops": {}, "note": null, "qty": 1 }]`
+    `[{ "epi":${variantId}, "empi": ${productId}, "du":"${productUrl}", "cprops": {"ou":"${productUrl}"}, "note": null, "qty": 1 }]`
   )
 
   var requestOptions = {
@@ -721,7 +721,7 @@ function hdls_CompareTimestamp(endDate, startDate) {
 }
 
 // This function is called only on pressing Wishlist button
-async function hdls_RefreshSwymConfig(swymConfig) {
+export async function hdls_RefreshSwymConfig(swymConfig) {
   var data = { ...swymConfig }
 
   if (swymConfig == null) {
@@ -764,18 +764,12 @@ export async function hdls_SetSwymConfig(swymConfig) {
 
 export function SwymCollectionsButton(productData) {
   const Button = () => {
-    // window.onclick = function (event) {
-    //   if (event.target.className === 'wishlist-modal') {
-    //     event.target.style.display = 'none'
-    //   }
-    // }
-
-    return <button onClick={name}>{'\u2665'}</button>
+    return <button onClick={variantModal}>{'\u2665'}</button>
   }
 
   var data = productData.productData
 
-  async function name(e) {
+  async function variantModal(e) {
     e.preventDefault()
     var productHandle = data.slug
     var productData = await hdls_ProductData(productHandle)
@@ -805,4 +799,12 @@ export function hdls_SetLocalStorage(swymData) {
   console.log(swymData)
 
   return addData
+}
+
+export async function hdls_GetListDetails() {
+  var hdls_ls = JSON.parse(localStorage.getItem(hdls_ls_name))
+
+  const data = await hdls_RefreshSwymConfig(hdls_ls)
+
+  return data
 }

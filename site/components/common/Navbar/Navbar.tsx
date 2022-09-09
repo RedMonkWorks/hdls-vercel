@@ -33,6 +33,9 @@ const Navbar: FC<NavbarProps> = ({ links }) => (
                 <a className={s.link}>{l.label}</a>
               </Link>
             ))}
+            <Link href="/swym-wishlist">
+              <a className={s.link}>Wishlist</a>
+            </Link>
           </nav>
         </div>
         {process.env.COMMERCE_SEARCH_ENABLED && (
