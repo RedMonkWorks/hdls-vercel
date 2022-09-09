@@ -523,7 +523,7 @@ async function hdls_ProductWishlistState(productId, variantId, swymConfig) {
   return found
 }
 
-async function hdls_GetOrCreateDefaultWishlist(swymConfig) {
+export async function hdls_GetOrCreateDefaultWishlist(swymConfig) {
   console.log('Hdls - Fetching or Creating List for Current Regid')
 
   return fetch(

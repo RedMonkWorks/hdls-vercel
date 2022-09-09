@@ -5,7 +5,10 @@ import { Text, Container, Skeleton } from '@components/ui'
 import { useCustomer } from '@framework/customer'
 import rangeMap from '@lib/range-map'
 import { useEffect, useState } from 'react'
-import { hdls_RefreshSwymConfig } from '@lib/swym'
+import {
+  hdls_RefreshSwymConfig,
+  hdls_GetOrCreateDefaultWishlist,
+} from '@lib/swym'
 import Image, { ImageProps } from 'next/image'
 import ProductTag from '@components/product/ProductTag'
 
@@ -36,9 +39,11 @@ export default function Wishlist() {
   let [list, setList] = useState([])
 
   useEffect(() => {
-    var list = JSON.parse(localStorage.getItem('hdls_ls'))
+    var config = JSON.parse(localStorage.getItem('hdls_ls'))
     // console.log(list.listcontents)
-    setList(list.listcontents)
+    hdls_GetOrCreateDefaultWishlist(config).then((data) => {
+      setList(data.listcontents)
+    })
   }, [])
 
   return (
