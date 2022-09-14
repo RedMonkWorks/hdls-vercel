@@ -578,33 +578,42 @@ export async function hdls_SwymConfig(customerToken) {
     var data = await hdls_GetCustomerEmail(customerToken)
 
     console.log(data.data.customer)
+    var hdls_ls = JSON.parse(localStorage.getItem(hdls_ls_name))
+
+    var extuid = window
+      .atob(data.data.customer.id)
+      .split('gid://shopify/Customer/')[1]
 
     var myHeaders = new Headers()
-    myHeaders.append('Content-Type', 'application/json')
-    myHeaders.append('Accept', 'application/json')
+    myHeaders.append('Content-Type', 'application/x-www-form-urlencoded')
 
-    var raw = JSON.stringify({
-      host: SWYM_HDLS_CONFIG.swymHost,
-      email: data.data.customer.email,
-      pid: SWYM_HDLS_CONFIG.swymPid,
-    })
+    var urlencoded = new URLSearchParams()
+    urlencoded.append('regid', hdls_ls.regid)
+    urlencoded.append('sessionid', hdls_ls.swymSession.sessionid)
+    urlencoded.append('platform', 'shopify')
+    urlencoded.append('extuid', parseInt(extuid))
 
     var requestOptions = {
       method: 'POST',
       headers: myHeaders,
-      body: raw,
+      body: urlencoded,
       redirect: 'follow',
     }
 
-    return fetch('http://localhost:5050/auth', requestOptions)
+    return fetch(
+      `https://swymstore-v3dev-01-01.swymrelay.com/api/v3/lists/user-validate-sync?pid=${encodeURIComponent(
+        SWYM_HDLS_CONFIG.swymPid
+      )}`,
+      requestOptions
+    )
       .then((response) => response.json())
       .then((result) => {
-        console.log('Hdls - User Login Detected and RegID generated')
+        console.log('Hdls - User Login Detected and RegID generated', result)
 
         const swymConfig = {
           regid: result.regid,
           swymSession: {
-            sessionid: result.sessionid,
+            sessionid: hdls_CreateSessionid(32),
             timestamp: Date.now(),
           },
         }
@@ -616,6 +625,44 @@ export async function hdls_SwymConfig(customerToken) {
 
         return error
       })
+
+    // var myHeaders = new Headers()
+    // myHeaders.append('Content-Type', 'application/json')
+    // myHeaders.append('Accept', 'application/json')
+
+    // var raw = JSON.stringify({
+    //   host: SWYM_HDLS_CONFIG.swymHost,
+    //   email: data.data.customer.email,
+    //   pid: SWYM_HDLS_CONFIG.swymPid,
+    // })
+
+    // var requestOptions = {
+    //   method: 'POST',
+    //   headers: myHeaders,
+    //   body: raw,
+    //   redirect: 'follow',
+    // }
+
+    // return fetch('http://localhost:5050/auth', requestOptions)
+    //   .then((response) => response.json())
+    //   .then((result) => {
+    //     console.log('Hdls - User Login Detected and RegID generated')
+
+    //     const swymConfig = {
+    //       regid: result.regid,
+    //       swymSession: {
+    //         sessionid: result.sessionid,
+    //         timestamp: Date.now(),
+    //       },
+    //     }
+
+    //     return swymConfig
+    //   })
+    //   .catch((error) => {
+    //     console.log('error', error)
+
+    //     return error
+    //   })
   } else {
     return fetch(
       `${
@@ -764,7 +811,11 @@ export async function hdls_SetSwymConfig(swymConfig) {
 
 export function SwymCollectionsButton(productData) {
   const Button = () => {
-    return <button onClick={variantModal}>{'\u2665'}</button>
+    return (
+      <button className="swymCollectionsButton" onClick={variantModal}>
+        {'\u2665'}
+      </button>
+    )
   }
 
   var data = productData.productData

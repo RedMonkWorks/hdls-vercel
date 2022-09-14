@@ -59,7 +59,7 @@ export default function Home({
           <ProductCard key={product.id} product={product} variant="slim" />
         ))}
       </Marquee>
-      <Hero headline="Swym Headless Shop" description="Nothing" />
+      <Hero headline="Swym Headless Shop" description="Made by Yashit" />
 
       <Grid layout="B" variant="filled">
         {products.slice(0, 3).map((product: any, i: number) => (

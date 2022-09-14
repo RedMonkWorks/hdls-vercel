@@ -11,6 +11,8 @@ import {
 } from '@lib/swym'
 import Image, { ImageProps } from 'next/image'
 import ProductTag from '@components/product/ProductTag'
+import cn from 'clsx'
+import s from './../components/product/ProductCard/ProductCard.module.css'
 
 export async function getStaticProps({
   preview,
@@ -31,15 +33,18 @@ export async function getStaticProps({
   }
 }
 
-export default function Wishlist() {
+export default function SwymWishlist() {
   const { data: customer } = useCustomer()
   // @ts-ignore Shopify - Fix this types
   // console.log(customer)
 
+  const rootClassName = cn(s.root)
+
   let [list, setList] = useState([])
 
   useEffect(() => {
-    var config = JSON.parse(localStorage.getItem('hdls_ls'))
+    var hdls_ls_name = 'hdls_ls'
+    var config = JSON.parse(localStorage.getItem(hdls_ls_name) || '{}')
     // console.log(list.listcontents)
     hdls_GetOrCreateDefaultWishlist(config).then((data) => {
       setList(data.listcontents)
@@ -55,23 +60,25 @@ export default function Wishlist() {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {list?.map((l) => (
                 <a
-                  key={l.epi}
-                  class="ProductCard_root__HqXTt ProductCard_simple__HMkuK animated fadeIn"
-                  aria-label={l.dt}
-                  href={l.cprops.ou}
+                  key={l['epi']}
+                  className="ProductCard_root__HqXTt ProductCard_simple__HMkuK animated fadeIn"
+                  aria-label={l['dt']}
+                  href={l['cprops']['ou']}
                 >
-                  <div class="ProductCard_header__qlwPO">
-                    <h3 class="ProductCard_name__YciuQ">
-                      <span>Greed Jacket</span>
+                  <div className="ProductCard_header__qlwPO">
+                    <h3 className="ProductCard_name__YciuQ">
+                      <span>{l['dt']}</span>
                     </h3>
-                    <div class="ProductCard_price___JB_V">$161.00 USD</div>
+                    <div className="ProductCard_price___JB_V">
+                      {l['pr']}.00 USD
+                    </div>
                   </div>
                   <div className="ProductCard_imageContainer__G6HoR">
                     <div>
                       <Image
-                        alt={l.dt || 'Product Image'}
-                        src={l.iu}
-                        className="ProductCard_productImage__nbfNy"
+                        alt={l['dt'] || 'Product Image'}
+                        src={l['iu']}
+                        className="Wishlist_listImage ProductCard_productImage__nbfNy"
                         height={320}
                         width={320}
                         quality="85"
@@ -89,18 +96,4 @@ export default function Wishlist() {
   )
 }
 
-Wishlist.Layout = Layout
-
-{
-  /* <p>{l.dt}</p>
-                <div className="ProductCard_imageContainer__G6HoR">
-                  <Image
-                    quality="85"
-                    src={l.iu}
-                    height={320}
-                    width={320}
-                    layout="fixed"
-                  />
-                </div> */
-  // href={`${l.du.substring(l.du.indexOf('/product/') + 1)}`}
-}
+SwymWishlist.Layout = Layout

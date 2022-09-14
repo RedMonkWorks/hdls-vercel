@@ -53,6 +53,8 @@ export const handler: MutationHook<LoginHook> = {
       hdls_SwymConfig(accessToken).then((data) => {
         // hdls_SetSwymConfig(data)
 
+        // console.log('In Login tsx', data)
+
         hdls_SetLocalStorage(data)
       })
     }
